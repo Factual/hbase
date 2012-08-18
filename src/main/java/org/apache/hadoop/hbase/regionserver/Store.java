@@ -45,6 +45,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.fs.HFileSystem;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -530,7 +531,15 @@ public class Store extends SchemaConfigured implements HeapSize {
 
     // Move the file if it's on another filesystem
     FileSystem srcFs = srcPath.getFileSystem(conf);
-    if (!srcFs.equals(fs)) {
+
+    LOG.info("SRC FS:" + srcFs.toString() + " SRC OBJ:" + srcFs);
+    FileSystem storeFS = fs;
+    if (fs instanceof HFileSystem) {
+      storeFS = ((HFileSystem)fs).getBackingFs();
+    }
+    LOG.info("STORE FS:" + storeFS.toString() + " SRC OBJ:" + storeFS);
+
+    if (!srcFs.equals(storeFS)) {
       LOG.info("File " + srcPath + " on different filesystem than " +
           "destination store - moving to this filesystem.");
       Path tmpPath = getTmpPath();
